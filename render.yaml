@@ -1,8 +1,7 @@
 services:
   - type: web
     name: twig-ticket-app
-    env: php
+    runtime: php
     plan: free
     buildCommand: composer install
     startCommand: php -S 0.0.0.0:10000 -t public
-    autoDeploy: true
