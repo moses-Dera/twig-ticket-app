@@ -1,0 +1,67 @@
+{% extends 'base.twig' %}
+{% block content %}
+<section style="padding: 3rem 0;">
+  <div class="container-max" style="max-width:680px; margin:0 auto;">
+    <div class="card">
+      <h2 style="font-size:1.25rem; font-weight:700;">Login</h2>
+
+      {% if app.request is defined and app.request.query.get('message') %}
+        <div style="color:#b91c1c; margin: .5rem 0;">{{ app.request.query.get('message') }}</div>
+      {% elseif (get|default('')) %}
+        {# fallback - query param read client-side #}
+      {% endif %}
+
+      <form id="login-form" style="margin-top:1rem;">
+        <div class="mb-2">
+          <input id="login-email" class="form-input" placeholder="Email" type="email" />
+          <div id="err-email" class="form-error" style="display:none;"></div>
+        </div>
+        <div class="mb-2">
+          <input id="login-password" class="form-input" placeholder="Password" type="password" />
+          <div id="err-password" class="form-error" style="display:none;"></div>
+        </div>
+        <div class="row" style="margin-top:.75rem;">
+          <button type="submit" class="btn btn-primary">Login</button>
+        </div>
+      </form>
+
+      <p class="text-muted mt-4">Test user: <strong>test.user@example.com</strong> / <strong>Password123!</strong></p>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  // show any server-side query message (if present in URL)
+  const params = new URLSearchParams(location.search);
+  const msg = params.get('message');
+  if (msg) { window.toast.push({ type:'error', title: msg }); }
+
+  const form = document.getElementById('login-form');
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    // clear errors
+    document.getElementById('err-email').style.display = 'none';
+    document.getElementById('err-password').style.display = 'none';
+
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    let hasErr = false;
+    if (!email) { const el = document.getElementById('err-email'); el.innerText = 'Email is required.'; el.style.display='block'; hasErr=true; }
+    if (!password) { const el = document.getElementById('err-password'); el.innerText = 'Password is required.'; el.style.display='block'; hasErr=true; }
+    if (hasErr) return;
+
+    const res = await window.auth.login(email, password);
+    if (res.ok) {
+      window.toast.push({ type:'success', title: 'Logged in' });
+      // goto dashboard
+      location.href = '/dashboard';
+    } else {
+      window.toast.push({ type:'error', title: res.message || 'Login failed' });
+    }
+  });
+})();
+</script>
+{% endblock %}
+

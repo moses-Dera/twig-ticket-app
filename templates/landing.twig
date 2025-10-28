@@ -1,0 +1,37 @@
+{% extends 'base.twig' %}
+
+{% block content %}
+<section class="hero" aria-labelledby="hero-title">
+  <div class="container-max hero-inner">
+    <h1 id="hero-title" style="font-size:2.25rem; font-weight:700; margin-bottom:.5rem;">TicketApp — Reserve. Manage. Resolve.</h1>
+    <p style="font-size:1.05rem; margin-bottom:1rem; opacity:0.95;">A lightweight ticket management experience built across multiple frameworks. Secure, responsive, and accessible.</p>
+    <div class="cta">
+      <a href="/auth/login" class="btn btn-ghost" style="border-radius:12px;">Login</a>
+      <a href="/auth/signup" class="btn btn-primary" style="border-radius:12px;">Get Started</a>
+    </div>
+  </div>
+
+  <div class="dec-circle" aria-hidden="true"></div>
+  <div style="position:relative; margin-top:2rem;">
+    <img src="/assets/wave-hero.svg" alt="" style="width:100%; display:block;" />
+  </div>
+</section>
+
+<div class="container-max" style="margin-top:-3rem;">
+  <div style="display:grid; gap:1rem; grid-template-columns: repeat(1,1fr);">
+    <div class="card" style="display:flex; gap:1rem; flex-direction:column;">
+      <h3 style="font-weight:700;">Create Tickets</h3>
+      <p class="text-muted">Open new tickets with ease.</p>
+    </div>
+    <div class="card">
+      <h3 style="font-weight:700;">Track Status</h3>
+      <p class="text-muted">Open / In progress / Closed.</p>
+    </div>
+    <div class="card">
+      <h3 style="font-weight:700;">Manage Team</h3>
+      <p class="text-muted">Assign and resolve fast.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

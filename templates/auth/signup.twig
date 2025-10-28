@@ -1,0 +1,59 @@
+{% extends 'base.twig' %}
+{% block content %}
+<section style="padding: 3rem 0;">
+  <div class="container-max" style="max-width:680px; margin:0 auto;">
+    <div class="card">
+      <h2 style="font-size:1.25rem; font-weight:700;">Create an account</h2>
+
+      <form id="signup-form" style="margin-top:1rem;">
+        <div class="mb-2">
+          <input id="signup-email" class="form-input" placeholder="Email" type="email" />
+          <div id="err-email" class="form-error" style="display:none;"></div>
+        </div>
+        <div class="mb-2">
+          <input id="signup-password" class="form-input" placeholder="Password" type="password" />
+          <div id="err-password" class="form-error" style="display:none;"></div>
+        </div>
+        <div class="mb-2">
+          <input id="signup-password2" class="form-input" placeholder="Confirm Password" type="password" />
+          <div id="err-password2" class="form-error" style="display:none;"></div>
+        </div>
+
+        <div class="row" style="margin-top:.75rem;">
+          <button type="submit" class="btn btn-primary">Sign up</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  const form = document.getElementById('signup-form');
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    document.getElementById('err-email').style.display='none';
+    document.getElementById('err-password').style.display='none';
+    document.getElementById('err-password2').style.display='none';
+
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    const password2 = document.getElementById('signup-password2').value;
+
+    let hasErr = false;
+    if (!email) { const el = document.getElementById('err-email'); el.innerText='Email required'; el.style.display='block'; hasErr=true; }
+    if (!password) { const el = document.getElementById('err-password'); el.innerText='Password required'; el.style.display='block'; hasErr=true; }
+    if (password !== password2) { const el = document.getElementById('err-password2'); el.innerText='Passwords do not match'; el.style.display='block'; hasErr=true; }
+    if (hasErr) return;
+
+    const res = await window.auth.signup(email, password);
+    if (res.ok) {
+      window.toast.push({ type:'success', title: 'Account created' });
+      location.href = '/dashboard';
+    } else {
+      window.toast.push({ type:'error', title: res.message || 'Signup failed' });
+    }
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TicketApp</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container-max inner">
+      <div class="row">
+        <a href="/" style="font-weight:700; color:var(--indigo); font-size:1.25rem;">TicketApp</a>
+        <nav class="row" style="margin-left:1rem; gap:1rem;">
+          <a href="/">Home</a>
+          <a href="/dashboard">Dashboard</a>
+          <a href="/tickets">Tickets</a>
+        </nav>
+      </div>
+      <div class="row">
+        <a href="/auth/login" class="small">Login</a>
+        <a href="/auth/signup" class="btn btn-primary small" style="margin-left:.5rem;">Get Started</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <div class="container-max">
+      © {{ "now"|date("Y") }} TicketApp • Built for Frontend Stage 2
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+  <script>
+    // Protect client-side pages: if token missing and user is on a protected route, redirect
+    (function(){
+      const protectedPaths = ['/dashboard','/tickets'];
+      if (protectedPaths.includes(location.pathname)) {
+        const t = localStorage.getItem('ticketapp_session');
+        if (!t) {
+          localStorage.removeItem('ticketapp_session');
+          // redirect to login with message
+          location.href = '/auth/login?message=' + encodeURIComponent('Your session has expired — please log in again.');
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

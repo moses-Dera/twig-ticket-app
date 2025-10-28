@@ -1,0 +1,194 @@
+{% extends 'base.twig' %}
+{% block content %}
+<section style="padding: 2.5rem 0;">
+  <div class="container-max">
+    <div style="display:flex; align-items:center; justify-content:space-between;">
+      <h1 style="font-size:1.25rem; font-weight:700;">Ticket Management</h1>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr; gap:1rem; margin-top:1rem;">
+      <div style="display:grid; grid-template-columns: 1fr; gap:1rem;">
+        <!-- Form (left) -->
+        <div class="card" id="ticket-form-card">
+          <h3 style="font-weight:700; margin-bottom:.5rem;" id="form-title">Create Ticket</h3>
+          <form id="ticket-form">
+            <div>
+              <label class="small">Title</label>
+              <input id="t-title" class="form-input" />
+              <div id="err-title" class="form-error" style="display:none;"></div>
+            </div>
+            <div class="mt-4">
+              <label class="small">Status</label>
+              <select id="t-status" class="form-select">
+                <option value="open">open</option>
+                <option value="in_progress">in_progress</option>
+                <option value="closed">closed</option>
+              </select>
+              <div id="err-status" class="form-error" style="display:none;"></div>
+            </div>
+            <div class="mt-4">
+              <label class="small">Priority</label>
+              <input id="t-priority" class="form-input" type="number" min="1" max="5" />
+              <div id="err-priority" class="form-error" style="display:none;"></div>
+            </div>
+            <div class="mt-4">
+              <label class="small">Description</label>
+              <textarea id="t-desc" class="form-textarea" rows="4"></textarea>
+              <div id="err-desc" class="form-error" style="display:none;"></div>
+            </div>
+            <div class="mt-4 row">
+              <button id="btn-save" class="btn btn-primary small">Save</button>
+              <button id="btn-reset" type="button" class="btn small" style="margin-left:.5rem;">Reset</button>
+            </div>
+            <input type="hidden" id="editing-id" />
+          </form>
+        </div>
+
+        <!-- List (right) -->
+        <div class="card">
+          <h3 style="font-weight:700; margin-bottom:.5rem;">Existing Tickets</h3>
+          <div id="tickets-list" class="grid-2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(async function(){
+  // helpers
+  const q = sel => document.querySelector(sel);
+  const ticketListEl = q('#tickets-list');
+
+  async function loadTickets(){
+    try {
+      const tickets = await window.ticketService.getTickets();
+      renderList(tickets);
+    } catch (e) {
+      window.toast.push({ type:'error', title: 'Failed to load tickets. Please retry.' });
+    }
+  }
+
+  function renderList(tickets){
+    ticketListEl.innerHTML = '';
+    if (!tickets.length) {
+      ticketListEl.innerHTML = '<div class="text-muted">No tickets yet.</div>';
+      return;
+    }
+    tickets.forEach(t => {
+      const div = document.createElement('div');
+      div.className = 'ticket-card';
+      const statusClass = 'status-' + t.status;
+      div.innerHTML = `
+        <div style="flex:1;">
+          <div style="font-weight:700;">${escapeHtml(t.title)}</div>
+          <div style="margin-top:.35rem; color:#6b7280;">${escapeHtml(t.description || '')}</div>
+          <div style="margin-top:.6rem; display:flex; gap:.5rem; align-items:center;">
+            <span class="status-badge ${statusClass}">${t.status.replace('_',' ')}</span>
+            ${t.priority ? `<span class="text-muted small">Priority: ${t.priority}</span>` : ''}
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:.35rem;">
+          <button data-edit="${t.id}" class="small" style="background:none; border:none; color:var(--indigo); cursor:pointer;">Edit</button>
+          <button data-delete="${t.id}" class="small" style="background:none; border:none; color:#dc2626; cursor:pointer;">Delete</button>
+        </div>
+      `;
+      ticketListEl.appendChild(div);
+    });
+  }
+
+  function escapeHtml(s) {
+    return s ? s.replace(/[&<>"']/g, (m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])) : '';
+  }
+
+  // form handlers
+  const form = q('#ticket-form');
+  const titleEl = q('#t-title');
+  const statusEl = q('#t-status');
+  const prioEl = q('#t-priority');
+  const descEl = q('#t-desc');
+  const editingIdEl = q('#editing-id');
+  const btnReset = q('#btn-reset');
+  const btnSave = q('#btn-save');
+  const formTitle = q('#form-title');
+
+  function clearErrors() {
+    ['#err-title','#err-status','#err-priority','#err-desc'].forEach(s => { const e = q(s); if (e) e.style.display='none'; });
+  }
+
+  function setFormFromTicket(t){
+    titleEl.value = t.title || '';
+    statusEl.value = t.status || 'open';
+    prioEl.value = t.priority || '';
+    descEl.value = t.description || '';
+    editingIdEl.value = t.id || '';
+    formTitle.innerText = t.id ? 'Edit Ticket' : 'Create Ticket';
+  }
+
+  btnReset.addEventListener('click', ()=> {
+    setFormFromTicket({ title:'', status:'open', priority:'', description:'', id: '' });
+    clearErrors();
+  });
+
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    clearErrors();
+    const ticket = {
+      title: titleEl.value.trim(),
+      status: statusEl.value,
+      priority: prioEl.value,
+      description: descEl.value.trim(),
+      reporter: 'test.user@example.com'
+    };
+    const errs = window.ticketService.validateTicketInput(ticket);
+    if (Object.keys(errs).length) {
+      if (errs.title) { q('#err-title').innerText = errs.title; q('#err-title').style.display='block'; }
+      if (errs.status) { q('#err-status').innerText = errs.status; q('#err-status').style.display='block'; }
+      if (errs.priority) { q('#err-priority').innerText = errs.priority; q('#err-priority').style.display='block'; }
+      if (errs.description) { q('#err-desc').innerText = errs.description; q('#err-desc').style.display='block'; }
+      return;
+    }
+
+    try {
+      if (editingIdEl.value) {
+        await window.ticketService.updateTicket(editingIdEl.value, ticket);
+        window.toast.push({ type:'success', title: 'Ticket updated' });
+      } else {
+        await window.ticketService.createTicket(ticket);
+        window.toast.push({ type:'success', title: 'Ticket created' });
+      }
+      setFormFromTicket({ title:'', status:'open', priority:'', description:'', id: '' });
+      loadTickets();
+    } catch (err) {
+      window.toast.push({ type:'error', title: 'Failed to save ticket. Please retry.' });
+    }
+  });
+
+  // delegate edit/delete
+  ticketListEl.addEventListener('click', async function(e){
+    const editId = e.target.getAttribute('data-edit');
+    const delId = e.target.getAttribute('data-delete');
+    if (editId) {
+      const tickets = await window.ticketService.getTickets();
+      const t = tickets.find(x => x.id === editId);
+      if (t) {
+        setFormFromTicket(t);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } else if (delId) {
+      if (!confirm('Are you sure you want to delete this ticket?')) return;
+      try {
+        await window.ticketService.deleteTicket(delId);
+        window.toast.push({ type:'success', title: 'Ticket deleted' });
+        loadTickets();
+      } catch {
+        window.toast.push({ type:'error', title: 'Failed to delete ticket.' });
+      }
+    }
+  });
+
+  // initial load
+  loadTickets();
+})();
+</script>
+{% endblock %}

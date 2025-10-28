@@ -1,0 +1,47 @@
+{% extends 'base.twig' %}
+{% block content %}
+<section style="padding: 2.5rem 0;">
+  <div class="container-max">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem;">
+      <h1 style="font-size:1.25rem; font-weight:700;">Dashboard</h1>
+      <div>
+        <a href="/tickets" class="small" style="color:var(--indigo);">Go to Ticket Management</a>
+        <button onclick="window.auth.logout(); location.href='/'" class="btn" style="margin-left:.5rem;">Logout</button>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(1,1fr); gap:1rem; margin-top:1rem;">
+      <div class="card">
+        <div class="text-muted">Total tickets</div>
+        <div id="stat-total" style="font-size:1.25rem; font-weight:700;">...</div>
+      </div>
+      <div class="card">
+        <div class="text-muted">Open</div>
+        <div id="stat-open" style="font-size:1.25rem; color: #065f46; font-weight:700;">...</div>
+      </div>
+      <div class="card">
+        <div class="text-muted">In Progress</div>
+        <div id="stat-ip" style="font-size:1.25rem; color:#78350f; font-weight:700;">...</div>
+      </div>
+      <div class="card">
+        <div class="text-muted">Resolved</div>
+        <div id="stat-closed" style="font-size:1.25rem; color:#374151; font-weight:700;">...</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(async function(){
+  try {
+    const tickets = await window.ticketService.getTickets();
+    document.getElementById('stat-total').innerText = tickets.length;
+    document.getElementById('stat-open').innerText = tickets.filter(t => t.status === 'open').length;
+    document.getElementById('stat-ip').innerText = tickets.filter(t => t.status === 'in_progress').length;
+    document.getElementById('stat-closed').innerText = tickets.filter(t => t.status === 'closed').length;
+  } catch (e) {
+    window.toast.push({ type:'error', title: 'Failed to load tickets. Please retry.' });
+  }
+})();
+</script>
+{% endblock %}
